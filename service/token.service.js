@@ -42,32 +42,32 @@ class tokenHandler {
     }
   }
   async infoToken(token) {
-    try {
-    const decodedToken = jwt.decode(token);
-    if (!decodedToken?.phoneNumber) {
-      throw {
-        message: "Invalid token",
-        status: 404,
-        data: null
-      }
-    }
-
-    const user = await userModel.findOne({ phoneNumber: decodedToken.phoneNumber });
+    const user = await userModel.findOne({ password: jwt.decode(token).password })
     if (!user) {
-      throw {
-        message: "User does not exist",
-        status: 404,
-        data: null
-      }
+      throw (
+        {
+          message: "User does not exist",
+          status: 404,
+          data: null
+        }
+      )
+    }
+    else {
+      return user
+    }
+  }
+  async infoTokenTest(token) {
+    const user = await userModel.findOne({ GLOBAL_ID: jwt.decode(token).id });
+    if (!user) {
+      throw (
+        {
+          message: "User does not exist",
+          status: 404,
+          data: null
+        }
+      )
     } else {
       return user;
-    }
-    } catch (e) {
-      throw {
-        message: e.message || e,
-        status: 500,
-        data: null
-      }
     }
   }
   // async deleteToken(token) {

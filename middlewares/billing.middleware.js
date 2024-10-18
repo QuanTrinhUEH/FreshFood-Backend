@@ -5,8 +5,8 @@ class billingHandler {
         try {
             const id = req.params.id;
             const existedBill = await billingModel.findOne({ ID: id })
-            if (existedBill) {
-                throw ({
+            if(existedBill) {
+                throw({
                     message: "Existed an identical bill",
                     status: 403,
                     data: null

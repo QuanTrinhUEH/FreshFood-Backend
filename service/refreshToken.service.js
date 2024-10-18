@@ -6,9 +6,9 @@ import tokenService from "./token.service.js";
 config();
 
 class refreshTokenHandler {
-    async createNew(token, phoneNumber) {
+    async createNew(token, email) {
         try {
-            const owner = await userModel.findOne({ phoneNumber })
+            const owner = await userModel.findOne({ email })
             const refreshToken = jwt.sign({ token }, process.env.JWT_PRIVATE_KEY, {
                 expiresIn: "7d",
                 algorithm: "HS256",
@@ -30,9 +30,9 @@ class refreshTokenHandler {
             }
         }
     }
-    async refreshNew(token, phoneNumber) {
+    async refreshNew(token, GLOBAL_ID) {
         try {
-            const owner = await userModel.findOne({ phoneNumber })
+            const owner = await userModel.findOne({ GLOBAL_ID })
             const refreshToken = jwt.sign({ token }, process.env.JWT_PRIVATE_KEY, {
                 expiresIn: "7d",
                 algorithm: "HS256",
@@ -79,7 +79,7 @@ class refreshTokenHandler {
     }
     async deleteRefreshToken(token) {
         try {
-            const user = await userModel.findOne({ phoneNumber: jwt.decode(token).phoneNumber });
+            const user = await userModel.findOne({ password: jwt.decode(token).password });
             if (!user) {
                 throw (
                     {

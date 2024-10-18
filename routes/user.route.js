@@ -5,7 +5,7 @@ import userMiddleware from "../middlewares/user.middleware.js";
 
 const userRouter = Router()
 
-userRouter.post('/register', imageService.saveSingleImg('avatar'), userMiddleware.register, userController.register)
+userRouter.post('/register', userMiddleware.register, userController.register)
 userRouter.post('/login', userMiddleware.login, userController.login)
 userRouter.put('/update/profile', imageService.saveSingleImg('avatar'), userMiddleware.updateProfile, userController.updateProfile)
 userRouter.put('/update/password', userMiddleware.updatePassword, userController.updatePassword)

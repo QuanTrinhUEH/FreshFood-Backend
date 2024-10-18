@@ -10,8 +10,8 @@ export const tokenController = async (req, res, next) => {
             );
         }
         const [owner, tokenDB] = await refreshTokenService.Validate(refreshToken);
-        const newToken = tokenService.signToken({ username: owner.username, password: owner.password, role: owner.role, profilePicture: owner.profilePicture, phoneNumber: owner.phoneNumber })
-        const newRT = await refreshTokenService.refreshNew(newToken, owner.phoneNumber)
+        const newToken = tokenService.signToken({ username: owner.username, password: owner.password, role: owner.ROLE, profile_picture: owner.profile_picture, id: owner.GLOBAL_ID })
+        const newRT = await refreshTokenService.refreshNew(newToken, owner.GLOBAL_ID)
 
         return res.status(200).json(
             {
@@ -21,8 +21,8 @@ export const tokenController = async (req, res, next) => {
                 data: {
                     user: {
                         username: owner.username,
-                        role: owner.role,
-                        profilePicture: owner.profilePicture,
+                        role: owner.ROLE,
+                        profile_picture: owner.profile_picture,
                     },
                     token: newToken,
                     refreshToken: newRT

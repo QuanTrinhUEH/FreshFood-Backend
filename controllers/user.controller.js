@@ -5,7 +5,6 @@ import userService from '../service/user.service.js';
 import tokenService from '../service/token.service.js';
 import refreshTokenService from '../service/refreshToken.service.js';
 import { userModel } from '../models/user.model.js';
-import { tokenModel } from '../models/token.model.js';
 
 
 
@@ -18,6 +17,8 @@ class userHandler {
 
             // encrypt password, salt and save in database
             const [newPassword, salt] = kryptoService.encrypt(password)
+
+            // save information of user in database, with new password as encrypted and their salt
             const newUser = await userService.createUser(phoneNumber, userName, newPassword, salt)
 
             // create token and refresh token with new user as payload
@@ -40,13 +41,8 @@ class userHandler {
                 },
             });
         }
-        catch (error) {
-            return res.status(error.status || 500).json({
-                success: false,
-                message: error.message || "Internal Server Error",
-                status: error.status || 500,
-                data: error.data || null
-            });
+        catch (e) {
+            next(e)
         }
     };
     async login(req, res, next) {
@@ -71,13 +67,8 @@ class userHandler {
                 },
             });
         }
-        catch (error) {
-            return res.status(error.status || 500).json({
-                success: false,
-                message: error.message || "Internal Server Error",
-                status: error.status || 500,
-                data: error.data || null
-            });
+        catch (e) {
+            next(e)
         }
     }
     async updateProfile(req, res, next) {
@@ -111,8 +102,7 @@ class userHandler {
                     }
                 },
             });
-        }
-        catch (error) {
+        } catch (error) {
             return res.status(error.status || 500).json({
                 success: false,
                 message: error.message || "Internal Server Error",
@@ -139,7 +129,7 @@ class userHandler {
                     status: 200,
                     data: {
                         user: {
-                            user: newUser.userName,
+                            userName: newUser.userName,
                             role: newUser.role,
                             profilePicture: newUser.profilePicture
                         },
@@ -148,8 +138,7 @@ class userHandler {
                     }
                 }
             )
-        }
-        catch (error) {
+        } catch (error) {
             return res.status(error.status || 500).json({
                 success: false,
                 message: error.message || "Internal Server Error",
@@ -166,13 +155,12 @@ class userHandler {
             await refreshTokenService.deleteRefreshToken(token);
             await userModel.findOneAndDelete(user)
             return res.status(201).json({
-                success: true,
+                success: true,  
                 message: "Delete Successfully",
                 status: 201,
                 data: null,
             });
-        }
-        catch (error) {
+        } catch (error) {
             return res.status(error.status || 500).json({
                 success: false,
                 message: error.message || "Internal Server Error",

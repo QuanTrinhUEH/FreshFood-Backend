@@ -6,8 +6,11 @@ import { itemModel } from "../models/item.model.js";
 const filePath = fs.realpathSync('./');
 
 class itemHandler {
+    async getItem(req, res, next) {
+        res.send(req.files)
+    }
     async createItem(req, res, next) {
-        const { itemName, price, variants, description, foodType, quantity } = req.body
+        const { itemName, price, discount, variants, description, food_type } = req.body
         const schema = Joi.object().keys({
             itemName: Joi.string()
                 .required(),
@@ -15,14 +18,15 @@ class itemHandler {
                 .min(1000)
                 .max(1000000)
                 .required(),
+            discount: Joi.number()
+                .min(1000)
+                .max(1000000)
+                .required(),
             variants: Joi.array(),
             description: Joi.string()
                 .required(),
-            foodType: Joi.string()
-                .required(),
-            quantity: Joi.number()
-                .min(1)
-                .required(),
+            food_type: Joi.string()
+                .required()
         })
         try {
             if (req.files.length === 0) {
@@ -46,7 +50,7 @@ class itemHandler {
 
             tokenService.verifyToken(token);
             const user = await tokenService.infoToken(token)
-            if (user.role !== 'admin') {
+            if (user.ROLE !== 'admin') {
                 throw ({
                     message: "Unauthorized action",
                     status: 403,
@@ -58,15 +62,14 @@ class itemHandler {
             await schema.validateAsync({
                 itemName,
                 price,
+                discount,
                 variants: JSON.parse(variants),
                 description,
-                foodType,
-                quantity
+                food_type
             })
             next()
         }
         catch (e) {
-            console.log(req.files)
             if (req.files.length > 0) {
                 const files = req.files;
                 files.map(e => fs.unlinkSync(filePath + '\\' + e.path))
@@ -75,7 +78,7 @@ class itemHandler {
         }
     }
     async updateItem(req, res, next) {
-        const { itemName, price, description, quantity } = req.body;
+        const { itemName, price, description } = req.body;
         const schema = Joi.object().keys({
             itemName: Joi.string()
                 .required(),
@@ -85,9 +88,6 @@ class itemHandler {
                 .required(),
             description: Joi.string()
                 .required(),
-            quantity: Joi.number()
-                .min(1)
-                .required()
         })
         try {
             if (!req.headers.authorization) {
@@ -98,15 +98,15 @@ class itemHandler {
 
             tokenService.verifyToken(token);
             const user = await tokenService.infoToken(token)
-            if (user.role !== 'admin') {
+            if (user.ROLE !== 'admin') {
                 throw ({
                     message: "Unauthorized action",
                     status: 403,
                     data: null
                 })
             }
-            const id = req.params.id;
-            const existedItem = itemModel.findOne({ _id: id, deleted: false })
+            const ID = req.params.id;
+            const existedItem = itemModel.findOne({ ID, deleted: false })
             if (!existedItem) {
                 throw ({
                     message: "Item does not exist",
@@ -118,7 +118,6 @@ class itemHandler {
                 itemName,
                 price,
                 description,
-                quantity
             })
             next()
         }
@@ -136,7 +135,7 @@ class itemHandler {
 
             tokenService.verifyToken(token);
             const user = await tokenService.infoToken(token)
-            if (user.role !== 'admin') {
+            if (user.ROLE !== 'admin') {
                 throw ({
                     message: "Unauthorized action",
                     status: 403,

@@ -7,25 +7,25 @@ const filePath = fs.realpathSync('./');
 
 class itemHandler {
     async getAllItems(req, res, next) {
-        const page = parseInt(req.query.p);
+        const page = parseInt(req.params.p);
         try {
             const allItems = await itemModel.find({ deleted: false })
             if (allItems.length === 0) {
-                return res.status(404).json({
+                res.status(404).json({
                     message: "No item in database available",
                     status: 404,
                     data: null
-                });
+                })
             }
-            const itemsPerPage = 8;
-            const startIndex = (page - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageItems = allItems.slice(startIndex, endIndex);
-            return res.status(200).json({
+            const pageCount = Math.ceil(allItems.length / 8);
+            if (page > pageCount) {
+                page = pageCount
+            }
+            res.status(200).json({
                 message: "Successfully",
                 status: 200,
                 data: {
-                    items: pageItems
+                    items: allItems.slice(0, page * 8)
                 }
             })
         }
@@ -34,12 +34,12 @@ class itemHandler {
         }
     }
     async getItemType(req, res, next) {
-        const page = parseInt(req.query.p);
-        const type = req.query.type;
+        const page = parseInt(req.params.p);
+        const type = req.params.type;
         try {
-            const items = await itemModel.find({ foodType: type, deleted: false })
+            const items = await itemModel.find({ food_type: type, deleted: false })
             if (items.length === 0) {
-                return res.status(404).json({
+                res.status(404).json({
                     message: "No item in database available",
                     status: 404,
                     data: null
@@ -52,7 +52,7 @@ class itemHandler {
             }
 
 
-            return res.status(200).json({
+            res.status(200).json({
                 message: "Successfully",
                 status: 200,
                 data: {
@@ -66,30 +66,39 @@ class itemHandler {
     }
     async getItem(req, res, next) {
         try {
-            const id = req.query.id;
-            const item = await itemModel.findOne({ _id: id, deleted: false })
+            const item = await itemModel.findById(req.params.id).populate('currentPromotion');
             if (!item) {
                 return res.status(404).json({
                     message: "Item not found",
                     status: 404,
                     data: null
-                })
+                });
             }
-            return res.status(200).json({
-                message: "Successfully get an item",
-                status: 200,
-                data: {
-                    item
+
+            let discountedPrice = item.price;
+            if (item.currentPromotion && item.currentPromotion.isActive) {
+                const now = new Date();
+                if (now >= item.currentPromotion.startDate && now <= item.currentPromotion.endDate) {
+                    discountedPrice = item.price * (1 - item.currentPromotion.discountPercentage / 100);
                 }
-            })
+            }
+
+            res.status(200).json({
+                message: "Item retrieved successfully",
+                status: 200,
+                data: { 
+                    ...item.toObject(), 
+                    discountedPrice: Math.round(discountedPrice * 100) / 100 
+                }
+            });
         }
         catch (e) {
-            next(e)
+            next(e);
         }
     }
     async searchItem(req, res, next) {
         try {
-            const name = req.query.name;
+            const name = req.params.name;
             const items = await itemModel.find({
                 itemName: {
                     $regex: name,
@@ -98,14 +107,14 @@ class itemHandler {
                 deleted: false
             })
             if (items.length === 0) {
-                return res.status(404).json({
+                res.status(404).json({
                     message: "No item in database available",
                     status: 404,
                     data: null
                 })
             }
             else {
-                return res.status(200).json({
+                res.status(200).json({
                     message: "Successfully",
                     status: 200,
                     data: {
@@ -119,38 +128,42 @@ class itemHandler {
         }
     }
     async createItem(req, res, next) {
-        const { itemName, price, variants, description, foodType, quantity } = req.body;
+        const { itemName, price, discount, variants, description, food_type } = req.body;
         const files = req.files;
 
         try {
             const data = await cloudinaryService.postMultipleImages(files.map(e => filePath + '\\' + e.path), 'food_img')
             await files.map(e => fs.unlinkSync(filePath + '\\' + e.path))
 
+            const ID = await itemModel.countDocuments();
+
             const newDescription = convertTagsToHtml(description, data.map(e => e.url))
 
             const newItem = await itemModel.create({
                 itemName,
                 price,
+                discount,
                 variants: JSON.parse(variants),
                 description: newDescription,
                 images: data.map(e => e.url),
-                foodType,
-                deleted: false,
-                quantity
+                food_type,
+                ID: ID + 1,
+                deleted: false
             })
 
-            return res.status(201).json({
+            res.json({
                 message: 'Successfully created new item',
                 status: 201,
                 data: {
                     item: {
                         itemName: newItem.itemName,
                         price: newItem.price,
+                        discount: newItem.discount,
                         variants: newItem.variants,
                         description: newItem.description,
                         images: newItem.images,
-                        foodType: newItem.foodType,
-                        quantity: newItem.quantity
+                        food_type: newItem.food_type,
+                        ID: newItem.ID
                     }
                 }
             })
@@ -160,32 +173,33 @@ class itemHandler {
         }
     }
     async updateItem(req, res, next) {
-        const id = req.params.id;
+        const ID = req.params.id;
         const { itemName, price, description } = req.body;
 
-        const newItem = await itemModel.findOneAndUpdate({ _id: id }, { itemName, price, description })
+        const newItem = await itemModel.findOneAndUpdate({ ID }, { itemName, price, description })
 
-        return res.status(201).json({
+        res.status(201).json({
             message: "Updated successfully",
             status: 201,
             data: {
                 item: {
                     itemName: newItem.itemName,
                     price: newItem.price,
+                    discount: newItem.discount,
                     variants: newItem.variants,
                     description: newItem.description,
                     images: newItem.images,
-                    foodType: newItem.foodType,
-                    quantity: newItem.quantity
+                    food_type: newItem.food_type,
+                    ID: newItem.ID
                 }
             }
         })
     }
     async deleteItem(req, res, next) {
         try {
-            const id = req.params.id;
-            await itemModel.findOneAndUpdate({ _id: id }, { deleted: true, quantity: 0 })
-            return res.status(202).json({
+            const ID = req.params.id;
+            await itemModel.findOneAndUpdate({ ID }, { deleted: true })
+            res.status(202).json({
                 message: "Deleted successfully",
                 status: 202,
                 data: null

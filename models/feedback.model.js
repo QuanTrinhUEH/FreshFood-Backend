@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
   feedback: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+  status: { type: String, enum: ['pending', 'reviewed', 'responded'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
 
-export const feedbackModel = mongoose.model('Feedback', feedbackSchema)
+export const feedbackModel = mongoose.model('Feedback', feedbackSchema);

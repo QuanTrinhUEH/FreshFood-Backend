@@ -2,37 +2,38 @@ import { itemModel } from "../models/item.model.js";
 import { userModel } from "../models/user.model.js";
 
 class userHandler {
-    async createUser(phoneNumber, userName, password, salt) {
+    async createUser(phoneNumber, userName, password, salt, avatar) {
         try {
             const newUser = await userModel.create({
                 phoneNumber,
                 userName,
                 password,
                 salt,
-                role: "customer"
-            });
+                role: "user",
+                profilePicture: avatar
+            })
 
-            return newUser;
-        } catch (error) {
+            return newUser
+        }
+        catch (e) {
             throw (
                 {
-                    message: error.message || error,
+                    message: e.message || e,
                     status: 500,
                     data: null
                 }
             )
         }
-
     }
-
     async updateUser(user, payload) {
         try {
-            const updatedUser = await userModel.findOneAndUpdate(user, payload, { new: true });
-            return updatedUser;
-        } catch (error) {
+            const updatedUser = await userModel.findOneAndUpdate(user, payload, { new: true })
+            return updatedUser
+        }
+        catch (e) {
             throw (
                 {
-                    message: error.message,
+                    message: e.message,
                     status: 500,
                     data: null
                 }
