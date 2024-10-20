@@ -1,38 +1,72 @@
 import { itemModel } from "../models/item.model.js";
 import cloudinaryService from "../service/cloudinary.service.js";
+import itemService from "../service/item.service.js";
 import { convertTagsToHtml } from "../utils/regex.js";
 import fs from 'fs';
 
 const filePath = fs.realpathSync('./');
 
 class itemHandler {
-    async getAllItems(req, res, next) {
-        const page = parseInt(req.params.p);
+    async getItemsAdmin(req, res, next) {
+        // const page = parseInt(req.params.p);
+        // try {
+        //     const allItems = await itemModel.find({ deleted: false })
+        //     if (allItems.length === 0) {
+        //         res.status(404).json({
+        //             message: "No item in database available",
+        //             status: 404,
+        //             data: null
+        //         })
+        //     }
+        //     const pageCount = Math.ceil(allItems.length / 8);
+        //     if (page > pageCount) {
+        //         page = pageCount
+        //     }
+        //     res.status(200).json({
+        //         message: "Successfully",
+        //         status: 200,
+        //         data: {
+        //             items: allItems.slice(0, page * 8)
+        //         }
+        //     })
+        // }
+        // catch (e) {
+        //     next(e)
+        // }
+
         try {
-            const allItems = await itemModel.find({ deleted: false })
-            if (allItems.length === 0) {
-                res.status(404).json({
-                    message: "No item in database available",
-                    status: 404,
-                    data: null
-                })
+            const { search = "", page = 1, pageSize = 10, status } = req.query;
+
+            const maxPageSize = 100;
+            const limitedPageSize = Math.min(pageSize, maxPageSize);
+
+            const filters = search
+                ? { itemName: { $regex: search, $options: "i" } } : {};
+            if (status !== null && status !== undefined && status !== "") {
+                filters.status = Number(status);
             }
-            const pageCount = Math.ceil(allItems.length / 8);
-            if (page > pageCount) {
-                page = pageCount
-            }
-            res.status(200).json({
-                message: "Successfully",
-                status: 200,
+
+            const { items, totalItemsCount } = await itemService.getItems(filters, page, limitedPageSize);
+
+            return res.status(200).json({
+                success: true,
+                message: "Get items for admin successfully",
                 data: {
-                    items: allItems.slice(0, page * 8)
-                }
-            })
+                    items,
+                    totalPages: Math.ceil(totalItemsCount / limitedPageSize),
+                    totalCount: totalItemsCount,
+                    currentPage: Number(page)
+                },
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
-        catch (e) {
-            next(e)
-        }
-    }
+    };
     async getItemType(req, res, next) {
         const page = parseInt(req.params.p);
         const type = req.params.type;
@@ -63,7 +97,7 @@ class itemHandler {
         catch (e) {
             next(e)
         }
-    }
+    };
     async getItem(req, res, next) {
         try {
             const item = await itemModel.findById(req.params.id).populate('currentPromotion');
@@ -86,45 +120,14 @@ class itemHandler {
             res.status(200).json({
                 message: "Item retrieved successfully",
                 status: 200,
-                data: { 
-                    ...item.toObject(), 
-                    discountedPrice: Math.round(discountedPrice * 100) / 100 
+                data: {
+                    ...item.toObject(),
+                    discountedPrice: Math.round(discountedPrice * 100) / 100
                 }
             });
         }
         catch (e) {
             next(e);
-        }
-    }
-    async searchItem(req, res, next) {
-        try {
-            const name = req.params.name;
-            const items = await itemModel.find({
-                itemName: {
-                    $regex: name,
-                    $options: 'i'
-                },
-                deleted: false
-            })
-            if (items.length === 0) {
-                res.status(404).json({
-                    message: "No item in database available",
-                    status: 404,
-                    data: null
-                })
-            }
-            else {
-                res.status(200).json({
-                    message: "Successfully",
-                    status: 200,
-                    data: {
-                        items,
-                    }
-                })
-            }
-        }
-        catch (e) {
-            next(e)
         }
     }
     async createItem(req, res, next) {
@@ -171,7 +174,7 @@ class itemHandler {
         catch (e) {
             next(e)
         }
-    }
+    };
     async updateItem(req, res, next) {
         const ID = req.params.id;
         const { itemName, price, description } = req.body;
@@ -194,7 +197,7 @@ class itemHandler {
                 }
             }
         })
-    }
+    };
     async deleteItem(req, res, next) {
         try {
             const ID = req.params.id;
@@ -208,7 +211,7 @@ class itemHandler {
         catch (e) {
             next(e)
         }
-    }
+    };
 }
 
 const itemController = new itemHandler();

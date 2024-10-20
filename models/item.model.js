@@ -6,9 +6,8 @@ const itemSchema = new mongoose.Schema({
     variants: [],
     description: { type: String, require: true },
     images: { type: Array, require: true },
-    food_type: { type: String, required: true },
-    ID: { type: Number, require: true, unique: true },
-    deleted: { type: Boolean, require: true },
+    foodType: { type: String, required: true },
+    status: { type: Number, enum: [0, 1], default: 1, require: true },
     currentPromotion: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion' }
 });
 

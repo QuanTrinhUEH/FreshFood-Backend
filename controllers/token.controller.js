@@ -1,4 +1,3 @@
-import refreshTokenService from "../service/refreshToken.service.js";
 import tokenService from "../service/token.service.js";
 
 export const tokenController = async (req, res, next) => {

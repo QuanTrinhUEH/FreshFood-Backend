@@ -1,8 +1,7 @@
 import fs from 'fs'
 import Joi from "joi";
 import { userModel } from "../models/user.model.js";
-import kryptoService from '../utils/hashing.js';
-import tokenService from '../service/token.service.js';
+import encodeService from '../utils/hashing.js';
 
 const filePath = fs.realpathSync('./')
 
@@ -95,9 +94,9 @@ class userHandler {
                     data: null
                 });
             }
-            const decryptedPassword = kryptoService.decrypt(password, existedUser.salt)
+            const isPasswordValid = encodeService.decrypt(password, existedUser.password);
 
-            if (existedUser.password != decryptedPassword) {
+            if (!isPasswordValid) {
                 return res.status(400).json({
                     success: false,
                     message: "Sai tài khoản hoặc mật khẩu",
@@ -106,6 +105,8 @@ class userHandler {
                 });
             }
 
+            req.user = existedUser;
+
             next()
         }
         catch (e) {
@@ -113,7 +114,7 @@ class userHandler {
         }
     }
     async updateProfile(req, res, next) {
-        const { userName } = req.body
+        const { userName, profileImage } = req.body;
         const schema = Joi.object().keys({
             userName: Joi.string()
                 .min(3)
@@ -124,36 +125,56 @@ class userHandler {
                     'string.max': 'Tên người dùng không được quá 30 ký tự',
                     'any.required': 'Tên người dùng không được để trống'
                 }),
+            profileImage: Joi.string()
+                .max(1000)
+                .uri()
+                .messages({
+                    "string.base": "Link ảnh không hợp lệ",
+                    "string.max": "Link ảnh không được quá 1000 ký tự",
+                    "string.uri": "Link ảnh không hợp lệ",
+                }),
         })
         try {
-            if (!req.headers.authorization) {
+            await schema.validateAsync({
+                userName,
+                profileImage
+            });
+
+            const user = req.user;
+            if (!user) {
                 return res.status(400).json({
                     success: false,
-                    message: 'No credentials sent!',
+                    message: "Không có quyền truy cập",
                     status: 403,
                     data: null
                 });
             }
 
-            const token = req.headers.authorization.split(' ')[1] || undefined
-
-            tokenService.verifyToken(token);
-
-            await schema.validateAsync({
-                userName
-            })
+            const existedUser = await userModel.findOne({ userName: req.body.userName, _id: { $ne: user._id } });
+            if (existedUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Tên người dùng đã tồn tại",
+                    status: 403,
+                    data: null
+                });
+            }
             next()
         }
         catch (e) {
-            if (req.file) {
-                fs.unlinkSync(`${filePath}\\images\\avatar\\${req.file.filename}`)
-            }
-            next(e)
+            next(e);
         }
     }
     async updatePassword(req, res, next) {
         const { password, newPassword } = req.body
         const schema = Joi.object().keys({
+            password: Joi.string()
+                .min(8)
+                .required()
+                .messages({
+                    'string.min': 'Mật khẩu phải có ít nhất 8 ký tự',
+                    'any.required': 'Mật khẩu không được để trống'
+                }),
             newPassword: Joi.string()
                 .min(8)
                 .required()
@@ -163,59 +184,16 @@ class userHandler {
                 }),
         })
         try {
-            if (!req.headers.authorization) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'No credentials sent!',
-                    status: 403,
-                    data: null
-                });
-            }
-            const token = req.headers.authorization.split(' ')[1];
-
-            tokenService.verifyToken(token);
-
-            const user = await tokenService.infoToken(token);
-
-            const decryptedPassword = kryptoService.decrypt(password, user.salt)
-
-            if (user.password != decryptedPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Sai mật khẩu",
-                    status: 403,
-                    data: null
-                });
-            }
             await schema.validateAsync({
+                password,
                 newPassword
             })
-            next()
-        }
-        catch (e) {
-            next(e)
-        }
-    }
-    async deleteUser(req, res, next) {
-        const { password } = req.body;
-        try {
-            if (!req.headers.authorization) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'No credentials sent!',
-                    status: 403,
-                    data: null
-                });
-            }
-            const token = req.headers.authorization.split(' ')[1];
 
-            tokenService.verifyToken(token);
+            const user = await userModel.findById(req.params.id);
 
-            const user = await tokenService.infoTokenTest(token);
+            const isPasswordValid = encodeService.decrypt(password, user.password);
 
-            const decryptedPassword = kryptoService.decrypt(password, user.salt)
-
-            if (user.password != decryptedPassword) {
+            if (!isPasswordValid) {
                 return res.status(400).json({
                     success: false,
                     message: "Sai mật khẩu",
@@ -223,7 +201,6 @@ class userHandler {
                     data: null
                 });
             }
-
             next()
         }
         catch (e) {

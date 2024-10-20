@@ -1,16 +1,14 @@
-import { itemModel } from "../models/item.model.js";
 import { userModel } from "../models/user.model.js";
 
 class userHandler {
-    async createUser(phoneNumber, userName, password, salt, avatar) {
+    async register(phoneNumber, userName, password, salt) {
         try {
             const newUser = await userModel.create({
                 phoneNumber,
                 userName,
                 password,
                 salt,
-                role: "user",
-                profilePicture: avatar
+                role: "user"
             })
 
             return newUser
@@ -25,9 +23,12 @@ class userHandler {
             )
         }
     }
-    async updateUser(user, payload) {
+    async updateUser(id, updateData) {
         try {
-            const updatedUser = await userModel.findOneAndUpdate(user, payload, { new: true })
+            console.log("id", id)
+            console.log("updateData", updateData)
+            const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
+            console.log("updatedUser", updatedUser)
             return updatedUser
         }
         catch (e) {

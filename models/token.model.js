@@ -1,7 +1,7 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
 const tokenSchema = new mongoose.Schema({
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user', require: true, unique: true },
+    owner: { type: String, require: true, unique: true },
     refreshToken: { type: String, unique: true }
 });
 

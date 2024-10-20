@@ -11,7 +11,7 @@ import itemRouter from './routes/item.route.js';
 import billingRoute from './routes/billing.route.js';
 import promotionRouter from './routes/promotion.route.js';
 import feedbackRouter from './routes/feedback.route.js';
-
+import uploadRouter from './routes/upload.route.js';
 const app = express();
 
 
@@ -39,6 +39,7 @@ app.use('/item', itemRouter);
 app.use('/checkout', billingRoute);
 app.use('/promotion', promotionRouter);
 app.use('/feedback', feedbackRouter);
+app.use('/upload', uploadRouter);
 // Error handling middleware
 app.use((err, req, res, next) => {
     if (err.message) {

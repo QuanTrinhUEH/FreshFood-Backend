@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 
-class krypto {
+class Encode {
     encrypt(password) {
         try {
             const salt = bcrypt.genSaltSync(10);
@@ -17,21 +17,23 @@ class krypto {
             )
         }
     }
-    decrypt(password, salt) {
+    decrypt(password, hashPassword) {
+        console.log("password", password)
+        console.log("hashPassword", hashPassword)   
         try {
-            return bcrypt.hashSync(password, salt)
-        }
-        catch (e) {
-            throw (
-                {
-                    message: e.message,
-                    status: 500,
-                    data: null
-                }
-            )
+            if (!password || !hashPassword) {
+                throw new Error('Password and hash are required');
+            }
+            return bcrypt.compareSync(password, hashPassword);
+        } catch (e) {
+            throw {
+                message: e.message,
+                status: 500,
+                data: null
+            };
         }
     }
 }
 
-const kryptoService = new krypto();
-export default kryptoService
+const encodeService = new Encode();
+export default encodeService

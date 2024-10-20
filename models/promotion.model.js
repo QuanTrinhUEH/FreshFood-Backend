@@ -7,7 +7,7 @@ const promotionSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   isActive: { type: Boolean, default: true },
-  applicableItems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'item' }],
+  applicableItems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

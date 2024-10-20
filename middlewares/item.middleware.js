@@ -6,9 +6,80 @@ import { itemModel } from "../models/item.model.js";
 const filePath = fs.realpathSync('./');
 
 class itemHandler {
-    async getItem(req, res, next) {
-        res.send(req.files)
-    }
+    async getItemsAdmin(req, res, next) {
+        const schema = Joi.object({
+            page: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Invalid page",
+                    "number.min": "Page must be greater than 0"
+                }),
+            pageSize: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Invalid page size",
+                    "number.min": "Page size must be greater than 0"
+                }),
+            search: Joi.string()
+                .optional()
+                .allow("")
+                .messages({
+                    "string.base": "Invalid search"
+                }),
+            status: Joi.number()
+                .valid(0, 1)
+                .optional()
+                .messages({
+                    "any.only": "Invalid status"
+                }),
+        });
+
+        try {
+            const value = await schema.validateAsync(req.query);
+            req.query = value;
+            next();
+        } catch (error) {
+            next(error);
+        }
+    };
+    async getItems(req, res, next) {
+        const schema = Joi.object({
+            page: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Invalid page",
+                    "number.min": "Page must be greater than 0"
+                }),
+            pageSize: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Invalid page size",
+                    "number.min": "Page size must be greater than 0"
+                }),
+            search: Joi.string()
+                .optional()
+                .allow("")
+                .messages({
+                    "string.base": "Invalid search"
+                })
+        });
+
+        try {
+            const value = await schema.validateAsync(req.query);
+            req.query = value;
+            next();
+        } catch (error) {
+            next(error);
+        }
+    };
     async createItem(req, res, next) {
         const { itemName, price, discount, variants, description, food_type } = req.body
         const schema = Joi.object().keys({
@@ -18,14 +89,10 @@ class itemHandler {
                 .min(1000)
                 .max(1000000)
                 .required(),
-            discount: Joi.number()
-                .min(1000)
-                .max(1000000)
-                .required(),
             variants: Joi.array(),
             description: Joi.string()
                 .required(),
-            food_type: Joi.string()
+            foodType: Joi.string()
                 .required()
         })
         try {
