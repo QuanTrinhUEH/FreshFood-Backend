@@ -3,7 +3,12 @@ import Joi from "joi";
 class feedbackHandler {
   async submitFeedback(req, res, next) {
     const schema = Joi.object().keys({
-      feedback: Joi.string().required()
+      feedback: Joi.string()
+        .required()
+        .messages({
+          "string.base": "Feedback không hợp lệ",
+          "any.required": "Feedback không được để trống"
+        })
     });
 
     try {
@@ -16,7 +21,13 @@ class feedbackHandler {
 
   async updateFeedbackStatus(req, res, next) {
     const schema = Joi.object().keys({
-      status: Joi.string().valid('pending', 'reviewed', 'responded').required()
+      status: Joi.string()
+        .valid('pending', 'reviewed', 'responded')
+        .required()
+        .messages({
+          "string.base": "Trạng thái không hợp lệ",
+          "any.required": "Trạng thái không được để trống"
+        })
     });
 
     try {
@@ -25,11 +36,6 @@ class feedbackHandler {
     } catch (e) {
       next(e);
     }
-  }
-
-  async deleteFeedback(req, res, next) {
-    // Add any necessary authorization checks here
-    next();
   }
 }
 

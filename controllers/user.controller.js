@@ -1,10 +1,7 @@
 import fs from 'fs'
-import cloudinaryService from '../service/cloudinary.service.js';
 import encodeService from '../utils/hashing.js';
 import userService from '../service/user.service.js';
 import tokenService from '../service/token.service.js';
-import { userModel } from '../models/user.model.js';
-
 
 
 const filePath = fs.realpathSync('./')
@@ -83,7 +80,6 @@ class UserHandler {
 
 
             const updatedUser = await userService.updateUser(id, updateData);
-            console.log(updatedUser)
 
             return res.status(201).json({
                 success: true,

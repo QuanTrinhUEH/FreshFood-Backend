@@ -1,13 +1,13 @@
 import { Router } from "express";
 import feedbackController from "../controllers/feedback.controller.js";
 import feedbackMiddleware from "../middlewares/feedback.middleware.js";
+import { authentication, authorization } from "../middlewares/auth.middleware.js";
 
 const feedbackRouter = Router();
 
-feedbackRouter.post('/submit', feedbackMiddleware.submitFeedback, feedbackController.submitFeedback);
-feedbackRouter.get('/get-all', feedbackController.getAllFeedback);
-feedbackRouter.put('/update-status/:id', feedbackMiddleware.updateFeedbackStatus, feedbackController.updateFeedbackStatus);
-feedbackRouter.delete('/delete/:id', feedbackMiddleware.deleteFeedback, feedbackController.deleteFeedback);
+feedbackRouter.get('/', authentication, feedbackController.getAllFeedback);
+feedbackRouter.post('/submit', authentication, authorization("user"), feedbackMiddleware.submitFeedback, feedbackController.submitFeedback);
+feedbackRouter.put('/status/:id', authentication, authorization("admin"), feedbackMiddleware.updateFeedbackStatus, feedbackController.updateFeedbackStatus);
 
 export default feedbackRouter;
 
