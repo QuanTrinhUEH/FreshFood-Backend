@@ -1,4 +1,5 @@
 import { orderModel } from '../models/order.model.js';
+import orderService from '../service/order.service.js';
 
 class OrderController {
   async createOrder(req, res, next) {
@@ -6,14 +7,10 @@ class OrderController {
       const { items, totalAmount } = req.body;
       const userId = req.user._id;
 
-      const newOrder = await orderModel.create({
-        user: userId,
-        items,
-        totalAmount
-      });
+      const newOrder = await orderService.createOrder(userId, items, totalAmount);
 
       res.status(201).json({
-        message: 'Order created successfully',
+        message: 'Đơn hàng đã tạo thành công',
         status: 201,
         data: { order: newOrder }
       });
@@ -27,22 +24,18 @@ class OrderController {
       const { id } = req.params;
       const { status } = req.body;
 
-      const updatedOrder = await orderModel.findByIdAndUpdate(
-        id,
-        { status },
-        { new: true }
-      );
+      const updatedOrder = await orderService.updateOrderStatus(id, status);
 
       if (!updatedOrder) {
         return res.status(404).json({
-          message: 'Order not found',
+          message: 'Đơn hàng không tồn tại',
           status: 404,
           data: null
         });
       }
 
       res.status(200).json({
-        message: 'Order status updated successfully',
+        message: 'Cập nhật trạng thái đơn hàng thành công',
         status: 200,
         data: { order: updatedOrder }
       });
@@ -55,22 +48,10 @@ class OrderController {
     try {
       const { id } = req.params;
 
-      const cancelledOrder = await orderModel.findByIdAndUpdate(
-        id,
-        { status: 'cancelled' },
-        { new: true }
-      );
-
-      if (!cancelledOrder) {
-        return res.status(404).json({
-          message: 'Order not found',
-          status: 404,
-          data: null
-        });
-      }
+      const cancelledOrder = await orderService.cancelOrder(id);
 
       res.status(200).json({
-        message: 'Order cancelled successfully',
+        message: 'Hủy đơn hàng thành công',
         status: 200,
         data: { order: cancelledOrder }
       });

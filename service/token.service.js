@@ -5,7 +5,7 @@ import { tokenModel } from "../models/token.model.js";
 config();
 
 
-class tokenHandler {
+class TokenService {
   signAccessToken(payload) {
     try {
       const accessToken = jwt.sign(payload, process.env.JWT_PRIVATE_KEY, {
@@ -163,6 +163,6 @@ class tokenHandler {
   //   }
   // }
 }
-const tokenService = new tokenHandler();
+const tokenService = new TokenService();
 
 export default tokenService;
