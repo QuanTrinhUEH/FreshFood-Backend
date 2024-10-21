@@ -28,8 +28,12 @@ export const tokenController = async (req, res, next) => {
                 }
             }
         )
-    }
-    catch(e) {
-        next(e)
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            success: false,
+            message: error.message || "Internal server error",
+            status: error.status || 500,
+            data: error.data || null
+        });
     }
 }

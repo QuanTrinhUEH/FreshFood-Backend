@@ -1,4 +1,3 @@
-import { promotionModel } from "../models/promotion.model.js";
 import promotionService from "../service/promotion.service.js";
 
 class promotionHandler {
@@ -13,30 +12,55 @@ class promotionHandler {
         status: 201,
         data: { promotion: newPromotion }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
   async getPromotions(req, res, next) {
     try {
-      const promotions = await promotionModel.find().populate('applicableItems');
-      res.status(200).json({
+      const { search = "", page = 1, pageSize = 10 } = req.query;
+
+      const maxPageSize = 100;
+      const limitedPageSize = Math.min(pageSize, maxPageSize);
+
+      const filters = search
+        ? { promotionName: { $regex: search, $options: "i" } } : {};
+      filters.status = 1;
+
+      const { promotions, totalPromotionsCount } = await promotionService.getPromotions(filters, page, limitedPageSize);
+
+      return res.status(200).json({
+        success: true,
         message: "Lấy danh sách khuyến mãi thành công",
-        status: 200,
-        data: { promotions }
+        data: {
+          promotions,
+          totalPages: Math.ceil(totalPromotionsCount / limitedPageSize),
+          totalCount: totalPromotionsCount,
+          currentPage: Number(page)
+        },
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
   async getPromotion(req, res, next) {
     try {
-      const promotion = await promotionModel.findById(req.params.id).populate('applicableItems');
+      const promotion = await promotionService.getPromotion(req.params.id);
       if (!promotion) {
         return res.status(404).json({
-          message: "Không tìm thấy khuyến mãi",
+          message: "Khuyến mãi không tồn tại",
           status: 404,
           data: null
         });
@@ -46,8 +70,13 @@ class promotionHandler {
         status: 200,
         data: { promotion }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
@@ -60,8 +89,13 @@ class promotionHandler {
         status: 200,
         data: { promotion: updatedPromotion }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 }

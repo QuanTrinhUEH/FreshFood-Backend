@@ -164,6 +164,67 @@ class promotionHandler {
       next(e);
     }
   }
+  async getPromotions(req, res, next) {
+    const schema = Joi.object({
+      page: Joi.number()
+        .integer()
+        .min(1)
+        .optional()
+        .messages({
+          "number.base": "Số trang không hợp lệ",
+          "number.min": "Số trang phải lớn hơn 0"
+        }),
+      pageSize: Joi.number()
+        .integer()
+        .min(1)
+        .optional()
+        .messages({
+          "number.base": "Số trang không hợp lệ",
+          "number.min": "Số trang phải lớn hơn 0"
+        }),
+      search: Joi.string()
+        .optional()
+        .allow("")
+        .messages({
+          "string.base": "Tìm kiếm không hợp lệ"
+        })
+    });
+
+    try {
+      const value = await schema.validateAsync(req.query);
+      req.query = value;
+      next();
+    } catch (e) {
+      next(e);
+    }
+  }
+  async getPromotion(req, res, next) {
+    const schema = Joi.object({
+      id: Joi.string()
+        .hex()
+        .length(24)
+        .required()
+        .messages({
+          'string.hex': 'ID khuyến mãi không hợp lệ',
+          'string.length': 'ID khuyến mãi không hợp lệ',
+          'any.required': 'ID khuyến mãi không được để trống'
+        })
+    });
+    try {
+      const { id } = await schema.validateAsync(req.params);
+      const promotion = await promotionModel.findById(id);
+      if (!promotion) {
+        return res.status(404).json({
+          message: "Khuyến mãi không tồn tại",
+          status: 404,
+          data: null
+        });
+      }
+      next();
+    } catch (e) {
+      next(e);
+    }
+  }
 }
 
 const promotionMiddleware = new promotionHandler();

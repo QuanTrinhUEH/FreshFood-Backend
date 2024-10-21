@@ -17,8 +17,13 @@ class feedbackHandler {
         status: 201,
         data: { feedback: newFeedback }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
@@ -30,8 +35,13 @@ class feedbackHandler {
         status: 200,
         data: { feedback }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
@@ -55,8 +65,13 @@ class feedbackHandler {
         status: 200,
         data: { feedback: updatedFeedback }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 

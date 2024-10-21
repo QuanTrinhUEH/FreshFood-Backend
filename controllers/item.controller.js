@@ -1,5 +1,4 @@
 import itemService from "../service/item.service.js";
-import fs from 'fs';
 
 class itemHandler {
     async getItemsAdmin(req, res) {
@@ -19,7 +18,7 @@ class itemHandler {
 
             return res.status(200).json({
                 success: true,
-                message: "Get items for admin successfully",
+                message: "Lấy danh sách sản phẩm cho admin thành công",
                 data: {
                     items,
                     totalPages: Math.ceil(totalItemsCount / limitedPageSize),
@@ -52,7 +51,7 @@ class itemHandler {
 
             return res.status(200).json({
                 success: true,
-                message: "Get items for user successfully",
+                message: "Lấy danh sách sản phẩm cho user thành công",
                 data: {
                     items,
                     totalPages: Math.ceil(totalItemsCount / limitedPageSize),
@@ -78,14 +77,14 @@ class itemHandler {
             if (!item) {
                 return res.status(404).json({
                     success: false,
-                    message: "Item not found",
+                    message: "Sản phẩm không tồn tại",
                     status: 404,
                     data: null
                 });
             } else {
                 return res.status(200).json({
                     success: true,
-                    message: "Get item successfully",
+                    message: "Lấy sản phẩm thành công",
                     status: 200,
                     data: {
                         item: {
@@ -121,7 +120,7 @@ class itemHandler {
             const newItem = await itemService.createItem(itemName, price, variants, description, images, foodType, promotion);
 
             res.json({
-                message: 'Successfully created new item',
+                message: 'Tạo sản phẩm thành công',
                 status: 201,
                 data: {
                     item: {
@@ -152,7 +151,7 @@ class itemHandler {
             const updatedItem = await itemService.updateItem(id, updateData);
 
             res.status(200).json({
-                message: "Updated successfully",
+                message: "Cập nhật sản phẩm thành công",
                 status: 200,
                 data: {
                     item: {

@@ -48,6 +48,15 @@ class PromotionService {
         );
         return updatedPromotion;
     }
+    async getPromotions(filters, page, pageSize) {
+        const promotions = await promotionModel.find(filters).populate('applicableItems').skip((page - 1) * pageSize).limit(pageSize);
+        const totalPromotionsCount = await promotionModel.countDocuments(filters);
+        return { promotions, totalPromotionsCount };
+    }
+    async getPromotion(promotionId) {
+        const promotion = await promotionModel.findById(promotionId).populate('applicableItems');
+        return promotion;
+    }
 }
 
 const promotionService = new PromotionService();
