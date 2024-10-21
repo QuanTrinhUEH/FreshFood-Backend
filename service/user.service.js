@@ -25,10 +25,7 @@ class userHandler {
     }
     async updateUser(id, updateData) {
         try {
-            console.log("id", id)
-            console.log("updateData", updateData)
             const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
-            console.log("updatedUser", updatedUser)
             return updatedUser
         }
         catch (e) {

@@ -18,8 +18,6 @@ class Encode {
         }
     }
     decrypt(password, hashPassword) {
-        console.log("password", password)
-        console.log("hashPassword", hashPassword)   
         try {
             if (!password || !hashPassword) {
                 throw new Error('Password and hash are required');

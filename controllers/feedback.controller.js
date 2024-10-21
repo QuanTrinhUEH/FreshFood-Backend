@@ -3,8 +3,9 @@ import { feedbackModel } from "../models/feedback.model.js";
 class feedbackHandler {
   async submitFeedback(req, res, next) {
     try {
+      console.log(req.headers.authorization);
       const { feedback } = req.body;
-      const userId = req.user.id; // Assuming you have user authentication middleware
+      const userId = req.user.id;
 
       const newFeedback = await feedbackModel.create({
         user: userId,
@@ -59,25 +60,6 @@ class feedbackHandler {
     }
   }
 
-  async deleteFeedback(req, res, next) {
-    try {
-      const deletedFeedback = await feedbackModel.findByIdAndDelete(req.params.id);
-      if (!deletedFeedback) {
-        return res.status(404).json({
-          message: "Feedback not found",
-          status: 404,
-          data: null
-        });
-      }
-      res.status(200).json({
-        message: "Feedback deleted successfully",
-        status: 200,
-        data: null
-      });
-    } catch (e) {
-      next(e);
-    }
-  }
 }
 
 const feedbackController = new feedbackHandler();

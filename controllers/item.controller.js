@@ -1,39 +1,8 @@
-import { itemModel } from "../models/item.model.js";
-import cloudinaryService from "../service/cloudinary.service.js";
 import itemService from "../service/item.service.js";
-import { convertTagsToHtml } from "../utils/regex.js";
 import fs from 'fs';
 
-const filePath = fs.realpathSync('./');
-
 class itemHandler {
-    async getItemsAdmin(req, res, next) {
-        // const page = parseInt(req.params.p);
-        // try {
-        //     const allItems = await itemModel.find({ deleted: false })
-        //     if (allItems.length === 0) {
-        //         res.status(404).json({
-        //             message: "No item in database available",
-        //             status: 404,
-        //             data: null
-        //         })
-        //     }
-        //     const pageCount = Math.ceil(allItems.length / 8);
-        //     if (page > pageCount) {
-        //         page = pageCount
-        //     }
-        //     res.status(200).json({
-        //         message: "Successfully",
-        //         status: 200,
-        //         data: {
-        //             items: allItems.slice(0, page * 8)
-        //         }
-        //     })
-        // }
-        // catch (e) {
-        //     next(e)
-        // }
-
+    async getItemsAdmin(req, res) {
         try {
             const { search = "", page = 1, pageSize = 10, status } = req.query;
 
@@ -67,92 +36,89 @@ class itemHandler {
             });
         }
     };
-    async getItemType(req, res, next) {
-        const page = parseInt(req.params.p);
-        const type = req.params.type;
+
+    async getItems(req, res) {
         try {
-            const items = await itemModel.find({ food_type: type, deleted: false })
-            if (items.length === 0) {
-                res.status(404).json({
-                    message: "No item in database available",
-                    status: 404,
-                    data: null
-                })
-            }
+            const { search = "", page = 1, pageSize = 10 } = req.query;
 
-            const pageCount = Math.ceil(items.length / 8);
-            if (page > pageCount) {
-                page = pageCount
-            }
+            const maxPageSize = 100;
+            const limitedPageSize = Math.min(pageSize, maxPageSize);
 
+            const filters = search
+                ? { itemName: { $regex: search, $options: "i" } } : {};
+            filters.status = 1;
 
-            res.status(200).json({
-                message: "Successfully",
-                status: 200,
+            const { items, totalItemsCount } = await itemService.getItems(filters, page, limitedPageSize);
+
+            return res.status(200).json({
+                success: true,
+                message: "Get items for user successfully",
                 data: {
-                    items: page ? items.slice(0, page * 8) : items,
-                }
-            })
-        }
-        catch (e) {
-            next(e)
+                    items,
+                    totalPages: Math.ceil(totalItemsCount / limitedPageSize),
+                    totalCount: totalItemsCount,
+                    currentPage: Number(page)
+                },
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     };
-    async getItem(req, res, next) {
+
+    async getItem(req, res) {
         try {
-            const item = await itemModel.findById(req.params.id).populate('currentPromotion');
+            const id = req.params.id;
+            const item = await itemService.getItem(id);
+
             if (!item) {
                 return res.status(404).json({
+                    success: false,
                     message: "Item not found",
                     status: 404,
                     data: null
                 });
+            } else {
+                return res.status(200).json({
+                    success: true,
+                    message: "Get item successfully",
+                    status: 200,
+                    data: {
+                        item: {
+                            _id: item._id,
+                            itemName: item.itemName,
+                            price: item.price,
+                            variants: item.variants,
+                            description: item.description,
+                            images: item.images,
+                            foodType: item.foodType,
+                            status: item.status,
+                            promotion: item.promotion,
+                            createdAt: item.createdAt,
+                            updatedAt: item.updatedAt
+                        }
+                    }
+                });
             }
-
-            let discountedPrice = item.price;
-            if (item.currentPromotion && item.currentPromotion.isActive) {
-                const now = new Date();
-                if (now >= item.currentPromotion.startDate && now <= item.currentPromotion.endDate) {
-                    discountedPrice = item.price * (1 - item.currentPromotion.discountPercentage / 100);
-                }
-            }
-
-            res.status(200).json({
-                message: "Item retrieved successfully",
-                status: 200,
-                data: {
-                    ...item.toObject(),
-                    discountedPrice: Math.round(discountedPrice * 100) / 100
-                }
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
             });
         }
-        catch (e) {
-            next(e);
-        }
-    }
-    async createItem(req, res, next) {
-        const { itemName, price, discount, variants, description, food_type } = req.body;
-        const files = req.files;
+    };
+
+    async createItem(req, res) {
+        const { itemName, price, variants, description, images, foodType, promotion } = req.body;
 
         try {
-            const data = await cloudinaryService.postMultipleImages(files.map(e => filePath + '\\' + e.path), 'food_img')
-            await files.map(e => fs.unlinkSync(filePath + '\\' + e.path))
-
-            const ID = await itemModel.countDocuments();
-
-            const newDescription = convertTagsToHtml(description, data.map(e => e.url))
-
-            const newItem = await itemModel.create({
-                itemName,
-                price,
-                discount,
-                variants: JSON.parse(variants),
-                description: newDescription,
-                images: data.map(e => e.url),
-                food_type,
-                ID: ID + 1,
-                deleted: false
-            })
+            const newItem = await itemService.createItem(itemName, price, variants, description, images, foodType, promotion);
 
             res.json({
                 message: 'Successfully created new item',
@@ -161,55 +127,53 @@ class itemHandler {
                     item: {
                         itemName: newItem.itemName,
                         price: newItem.price,
-                        discount: newItem.discount,
                         variants: newItem.variants,
                         description: newItem.description,
                         images: newItem.images,
-                        food_type: newItem.food_type,
-                        ID: newItem.ID
+                        foodType: newItem.foodType,
+                        promotion: newItem.promotion
                     }
                 }
             })
-        }
-        catch (e) {
-            next(e)
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     };
-    async updateItem(req, res, next) {
-        const ID = req.params.id;
-        const { itemName, price, description } = req.body;
-
-        const newItem = await itemModel.findOneAndUpdate({ ID }, { itemName, price, description })
-
-        res.status(201).json({
-            message: "Updated successfully",
-            status: 201,
-            data: {
-                item: {
-                    itemName: newItem.itemName,
-                    price: newItem.price,
-                    discount: newItem.discount,
-                    variants: newItem.variants,
-                    description: newItem.description,
-                    images: newItem.images,
-                    food_type: newItem.food_type,
-                    ID: newItem.ID
-                }
-            }
-        })
-    };
-    async deleteItem(req, res, next) {
+    async updateItem(req, res) {
         try {
-            const ID = req.params.id;
-            await itemModel.findOneAndUpdate({ ID }, { deleted: true })
-            res.status(202).json({
-                message: "Deleted successfully",
-                status: 202,
-                data: null
+            const { id } = req.params;
+            const updateData = req.body;
+
+            const updatedItem = await itemService.updateItem(id, updateData);
+
+            res.status(200).json({
+                message: "Updated successfully",
+                status: 200,
+                data: {
+                    item: {
+                        itemName: updatedItem.itemName,
+                        price: updatedItem.price,
+                        variants: updatedItem.variants,
+                        description: updatedItem.description,
+                        images: updatedItem.images,
+                        foodType: updatedItem.foodType,
+                        status: updatedItem.status,
+                        promotion: updatedItem.promotion
+                    }
+                }
             })
-        }
-        catch (e) {
-            next(e)
+        } catch (error) {
+            res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     };
 }
