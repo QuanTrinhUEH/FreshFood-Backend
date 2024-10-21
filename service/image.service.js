@@ -10,7 +10,7 @@ const cloudinaryConfig = {
 }
 cloudinary.config(cloudinaryConfig);
 
-class imageHandler {
+class ImageService {
     // saveSingleImg(path) {
     //     try {
     //         const storage = multer.diskStorage({
@@ -79,6 +79,6 @@ class imageHandler {
     }
 }
 
-const imageService = new imageHandler()
+const imageService = new ImageService()
 
 export default imageService;

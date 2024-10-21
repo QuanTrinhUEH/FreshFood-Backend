@@ -35,9 +35,13 @@ class UserHandler {
                     refreshToken,
                 },
             });
-        }
-        catch (e) {
-            next(e)
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     };
     async login(req, res, next) {
@@ -60,24 +64,19 @@ class UserHandler {
                     refreshToken,
                 },
             });
-        }
-        catch (e) {
-            next(e)
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     }
     async updateProfile(req, res, next) {
         try {
             const id = req.params.id;
             const updateData = req.body;
-            // if (req.file) {
-            //     const avatarData = await cloudinaryService.postSingleImage(`${filePath}\\${req.file.path}`, avatar)
-            //     fs.unlinkSync(`${filePath}\\${req.file.path}`)
-            //     avatar = avatarData.url
-            // }
-            // else {
-            //     avatar = false
-            // }
-
 
             const updatedUser = await userService.updateUser(id, updateData);
 
@@ -145,8 +144,13 @@ class UserHandler {
                 status: 200,
                 data: { user: req.user }
             });
-        } catch (e) {
-            next(e);
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
         }
     }
 }

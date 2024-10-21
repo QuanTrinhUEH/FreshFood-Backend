@@ -1,166 +1,101 @@
-import { promotionModel } from "../models/promotion.model.js";
-import { itemModel } from "../models/item.model.js";
+import promotionService from "../service/promotion.service.js";
 
 class promotionHandler {
   async createPromotion(req, res, next) {
     try {
-      const { name, description, discountPercentage, startDate, endDate } = req.body;
-      const newPromotion = await promotionModel.create({
-        name,
-        description,
-        discountPercentage,
-        startDate,
-        endDate
-      });
+      const { promotionName, description, discountPercentage, startDate, endDate, applicableItems } = req.body;
+
+      const newPromotion = await promotionService.createPromotion(promotionName, description, discountPercentage, startDate, endDate, applicableItems);
 
       res.status(201).json({
-        message: "Promotion created successfully",
+        message: "Tạo khuyến mãi thành công",
         status: 201,
         data: { promotion: newPromotion }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
-  async getAllPromotions(req, res, next) {
+  async getPromotions(req, res, next) {
     try {
-      const promotions = await promotionModel.find({ isActive: true });
-      res.status(200).json({
-        message: "Promotions retrieved successfully",
-        status: 200,
-        data: { promotions }
+      const { search = "", page = 1, pageSize = 10 } = req.query;
+
+      const maxPageSize = 100;
+      const limitedPageSize = Math.min(pageSize, maxPageSize);
+
+      const filters = search
+        ? { promotionName: { $regex: search, $options: "i" } } : {};
+      filters.status = 1;
+
+      const { promotions, totalPromotionsCount } = await promotionService.getPromotions(filters, page, limitedPageSize);
+
+      return res.status(200).json({
+        success: true,
+        message: "Lấy danh sách khuyến mãi thành công",
+        data: {
+          promotions,
+          totalPages: Math.ceil(totalPromotionsCount / limitedPageSize),
+          totalCount: totalPromotionsCount,
+          currentPage: Number(page)
+        },
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
   async getPromotion(req, res, next) {
     try {
-      const promotion = await promotionModel.findById(req.params.id);
+      const promotion = await promotionService.getPromotion(req.params.id);
       if (!promotion) {
         return res.status(404).json({
-          message: "Promotion not found",
+          message: "Khuyến mãi không tồn tại",
           status: 404,
           data: null
         });
       }
       res.status(200).json({
-        message: "Promotion retrieved successfully",
+        message: "Lấy thông tin khuyến mãi thành công",
         status: 200,
         data: { promotion }
       });
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
+      });
     }
   }
 
   async updatePromotion(req, res, next) {
     try {
-      const updatedPromotion = await promotionModel.findByIdAndUpdate(
-        req.params.id,
-        { ...req.body, updatedAt: Date.now() },
-        { new: true }
-      );
-      if (!updatedPromotion) {
-        return res.status(404).json({
-          message: "Promotion not found",
-          status: 404,
-          data: null
-        });
-      }
+      const { promotionName, description, discountPercentage, startDate, endDate, status, applicableItems } = req.body;
+      const updatedPromotion = await promotionService.updatePromotion(req.params.id, promotionName, description, discountPercentage, startDate, endDate, status, applicableItems);
       res.status(200).json({
-        message: "Promotion updated successfully",
+        message: "Cập nhật khuyến mãi thành công",
         status: 200,
         data: { promotion: updatedPromotion }
       });
-    } catch (e) {
-      next(e);
-    }
-  }
-
-  async deletePromotion(req, res, next) {
-    try {
-      const deletedPromotion = await promotionModel.findByIdAndDelete(req.params.id);
-      if (!deletedPromotion) {
-        return res.status(404).json({
-          message: "Promotion not found",
-          status: 404,
-          data: null
-        });
-      }
-      res.status(200).json({
-        message: "Promotion deleted successfully",
-        status: 200,
-        data: null
+    } catch (error) {
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error",
+        status: error.status || 500,
+        data: error.data || null
       });
-    } catch (e) {
-      next(e);
-    }
-  }
-
-  async addItemToPromotion(req, res, next) {
-    try {
-      const { promotionId, itemId } = req.params;
-      const promotion = await promotionModel.findById(promotionId);
-      const item = await itemModel.findById(itemId);
-
-      if (!promotion || !item) {
-        return res.status(404).json({
-          message: "Promotion or Item not found",
-          status: 404,
-          data: null
-        });
-      }
-
-      if (!promotion.applicableItems.includes(itemId)) {
-        promotion.applicableItems.push(itemId);
-        await promotion.save();
-      }
-
-      item.currentPromotion = promotionId;
-      await item.save();
-
-      res.status(200).json({
-        message: "Item added to promotion successfully",
-        status: 200,
-        data: { promotion, item }
-      });
-    } catch (e) {
-      next(e);
-    }
-  }
-
-  async removeItemFromPromotion(req, res, next) {
-    try {
-      const { promotionId, itemId } = req.params;
-      const promotion = await promotionModel.findById(promotionId);
-      const item = await itemModel.findById(itemId);
-
-      if (!promotion || !item) {
-        return res.status(404).json({
-          message: "Promotion or Item not found",
-          status: 404,
-          data: null
-        });
-      }
-
-      promotion.applicableItems = promotion.applicableItems.filter(id => id.toString() !== itemId);
-      await promotion.save();
-
-      if (item.currentPromotion && item.currentPromotion.toString() === promotionId) {
-        item.currentPromotion = null;
-        await item.save();
-      }
-
-      res.status(200).json({
-        message: "Item removed from promotion successfully",
-        status: 200,
-        data: { promotion, item }
-      });
-    } catch (e) {
-      next(e);
     }
   }
 }

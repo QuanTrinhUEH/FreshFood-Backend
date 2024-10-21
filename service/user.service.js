@@ -1,6 +1,6 @@
 import { userModel } from "../models/user.model.js";
 
-class userHandler {
+class UserService {
     async register(phoneNumber, userName, password, salt) {
         try {
             const newUser = await userModel.create({
@@ -40,5 +40,5 @@ class userHandler {
     }
 }
 
-const userService = new userHandler();
+const userService = new UserService();
 export default userService;

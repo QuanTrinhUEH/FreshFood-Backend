@@ -8,10 +8,10 @@ import databaseService from './service/database.service.js';
 import userRouter from './routes/user.route.js';
 import tokenRequest from './routes/token.route.js';
 import itemRouter from './routes/item.route.js';
-import billingRoute from './routes/billing.route.js';
 import promotionRouter from './routes/promotion.route.js';
 import feedbackRouter from './routes/feedback.route.js';
 import uploadRouter from './routes/upload.route.js';
+import orderRouter from './routes/order.route.js';
 const app = express();
 
 
@@ -36,10 +36,10 @@ app.get('/user', (req, res) => {
 app.use('/user', userRouter);
 app.use('/token', tokenRequest);
 app.use('/item', itemRouter);
-app.use('/checkout', billingRoute);
 app.use('/promotion', promotionRouter);
 app.use('/feedback', feedbackRouter);
 app.use('/upload', uploadRouter);
+app.use('/order', orderRouter);
 // Error handling middleware
 app.use((err, req, res, next) => {
     if (err.message) {

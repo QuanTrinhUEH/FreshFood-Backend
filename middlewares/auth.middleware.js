@@ -1,42 +1,5 @@
 import tokenService from '../service/token.service.js';
 
-// class AuthMiddleware {
-// async authentication(req, res, next) {
-//     try {
-//         const token = req.headers.authorization?.split(' ')[1];
-
-//         if (!token) {
-//             return res.status(401).json({
-//                 message: "No token provided",
-//                 status: 401,
-//                 data: null
-//             });
-//         }
-
-//         const decoded = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
-//         const user = await userModel.findById(decoded.id).select('-password');
-
-//         if (!user) {
-//             return res.status(404).json({
-//                 message: "User not found",
-//                 status: 404,
-//                 data: null
-//             });
-//         }
-
-//         req.user = user;
-//         next();
-//     } catch (error) {
-//         if (error instanceof jwt.JsonWebTokenError) {
-//             return res.status(401).json({
-//                 message: "Invalid token",
-//                 status: 401,
-//                 data: null
-//             });
-//         }
-//         next(error);
-//     }
-// }
 
 export const authentication = async (req, res, next) => {
     try {
@@ -83,4 +46,4 @@ export const authorization = (requiredRole) => async (req, res, next) => {
             details: error.message
         });
     }
-};
+}
