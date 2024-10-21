@@ -49,8 +49,58 @@ class PromotionService {
         return updatedPromotion;
     }
     async getPromotions(filters, page, pageSize) {
-        const promotions = await promotionModel.find(filters).populate('applicableItems').skip((page - 1) * pageSize).limit(pageSize);
-        const totalPromotionsCount = await promotionModel.countDocuments(filters);
+        const skip = (page - 1) * pageSize;
+
+        const results = await promotionModel.aggregate([
+            { $match: filters },
+            {
+                $lookup: {
+                    from: "items",
+                    localField: "applicableItems",
+                    foreignField: "_id",
+                    as: "applicableItems"
+                }
+            },
+            {
+                $facet: {
+                    totalCount: [{ $count: "count" }],
+                    documents: [
+                        { $skip: skip },
+                        { $limit: pageSize },
+                        {
+                            $project: {
+                                _id: 1,
+                                promotionName: 1,
+                                description: 1,
+                                discountPercentage: 1,
+                                startDate: 1,
+                                endDate: 1,
+                                status: 1,
+                                applicableItems: {
+                                    $map: {
+                                        input: "$applicableItems",
+                                        as: "item",
+                                        in: {
+                                            _id: "$$item._id",
+                                            itemName: "$$item.itemName",
+                                            price: "$$item.price"
+                                        }
+                                    }
+                                },
+                                createdAt: 1,
+                                updatedAt: 1
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const totalPromotionsCount = results[0].totalCount[0]
+            ? results[0].totalCount[0].count
+            : 0;
+        const promotions = results[0].documents;
+
         return { promotions, totalPromotionsCount };
     }
     async getPromotion(promotionId) {

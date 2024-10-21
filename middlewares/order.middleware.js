@@ -1,3 +1,5 @@
+import Joi from "joi";
+import { orderModel } from "../models/order.model.js";
 class OrderHandler {
     async createOrder(req, res, next) {
         try {
@@ -73,6 +75,40 @@ class OrderHandler {
                     data: null
                 });
             }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
+    async getOrders(req, res, next) {
+        const schema = Joi.object({
+            page: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Số trang không hợp lệ",
+                    "number.min": "Số trang phải lớn hơn 0"
+                }),
+            pageSize: Joi.number()
+                .integer()
+                .min(1)
+                .optional()
+                .messages({
+                    "number.base": "Số lượng trên trang không hợp lệ",
+                    "number.min": "Số lượng trên trang phải lớn hơn 0"
+                }),
+            search: Joi.string()
+                .optional()
+                .allow("")
+                .messages({
+                    "string.base": "Tìm kiếm không hợp lệ"
+                })
+        });
+
+        try {
+            const value = await schema.validateAsync(req.query);
+            req.query = value;
             next();
         } catch (e) {
             next(e);

@@ -1,4 +1,3 @@
-import { orderModel } from '../models/order.model.js';
 import orderService from '../service/order.service.js';
 
 class OrderController {
@@ -64,6 +63,63 @@ class OrderController {
                 message: 'Hủy đơn hàng thành công',
                 status: 200,
                 data: { order: cancelledOrder }
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
+        }
+    }
+
+    async getOrders(req, res, next) {
+        try {
+            const { search = "", page = 1, pageSize = 10 } = req.query;
+
+            const maxPageSize = 100;
+            const limitedPageSize = Math.min(pageSize, maxPageSize);
+
+            const filters = search
+                ? { orderId: { $regex: search, $options: "i" } } : {};
+
+            const { orders, totalOrdersCount } = await orderService.getOrders(filters, page, limitedPageSize);
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách đơn hàng thành công",
+                data: {
+                    orders,
+                    totalPages: Math.ceil(totalOrdersCount / limitedPageSize),
+                    totalCount: totalOrdersCount,
+                    currentPage: Number(page)
+                },
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
+        }
+    }
+
+    async getOrder(req, res, next) {
+        try {
+            const order = await orderService.getOrder(req.params.id);
+            if (!order) {
+                return res.status(404).json({
+                    message: "Đơn hàng không tồn tại",
+                    status: 404,
+                    data: null
+                });
+            }
+            res.status(200).json({
+                message: "Lấy thông tin đơn hàng thành công",
+                status: 200,
+                data: { order }
             });
         } catch (error) {
             return res.status(error.status || 500).json({
