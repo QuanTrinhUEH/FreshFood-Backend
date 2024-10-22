@@ -11,6 +11,7 @@ itemRouter.patch('/:id', authentication, authorization("admin"), itemMiddleware.
 itemRouter.get('/management', authentication, authorization("admin"), itemMiddleware.getItemsAdmin, itemController.getItemsAdmin);
 itemRouter.get('/', itemMiddleware.getItems, itemController.getItems);
 itemRouter.get('/promotions', itemMiddleware.getItems, itemController.getItemsWithPromotions);
+itemRouter.get('/foodType/:foodType', itemMiddleware.validateFoodType, itemMiddleware.getItems, itemController.getItemsByFoodType);
 itemRouter.get('/:id', itemController.getItem);
 
 export default itemRouter

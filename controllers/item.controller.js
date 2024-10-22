@@ -204,6 +204,36 @@ class itemHandler {
             });
         }
     };
+
+    async getItemsByFoodType(req, res) {
+        try {
+            const { foodType } = req.params;
+            const { page = 1, pageSize = 10 } = req.query;
+
+            const maxPageSize = 100;
+            const limitedPageSize = Math.min(parseInt(pageSize), maxPageSize);
+
+            const { items, totalItemsCount } = await itemService.getItemsByFoodType(foodType, page, limitedPageSize);
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách sản phẩm cùng loại thành công",
+                data: {
+                    items,
+                    totalPages: Math.ceil(totalItemsCount / limitedPageSize),
+                    totalCount: totalItemsCount,
+                    currentPage: Number(page)
+                },
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Internal server error",
+                status: error.status || 500,
+                data: error.data || null
+            });
+        }
+    };
 }
 
 const itemController = new itemHandler();

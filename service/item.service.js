@@ -121,6 +121,37 @@ class ItemService {
 
         return { items, totalItemsCount };
     }
+    async getItemsByFoodType(foodType, page, pageSize) {
+        const skip = (page - 1) * pageSize;
+
+        const results = await itemModel.aggregate([
+            { $match: { foodType: foodType, status: 1 } },
+            {
+                $facet: {
+                    totalCount: [{ $count: "count" }],
+                    items: [
+                        { $skip: skip },
+                        { $limit: pageSize },
+                        {
+                            $project: {
+                                _id: 1,
+                                itemName: 1,
+                                price: 1,
+                                images: 1,
+                                foodType: 1,
+                                promotion: 1
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const totalItemsCount = results[0].totalCount[0] ? results[0].totalCount[0].count : 0;
+        const items = results[0].items;
+
+        return { items, totalItemsCount };
+    }
 }
 
 const itemService = new ItemService();

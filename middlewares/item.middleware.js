@@ -251,6 +251,24 @@ class itemHandler {
             next(error);
         }
     };
+    async validateFoodType(req, res, next) {
+        const schema = Joi.object({
+            foodType: Joi.string()
+                .required()
+                .valid('fruits', 'vegetables', 'meats', 'seafood')
+                .messages({
+                    "any.required": "Loại sản phẩm không được để trống",
+                    "any.only": "Loại sản phẩm không hợp lệ"
+                })
+        });
+
+        try {
+            await schema.validateAsync(req.params);
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
 }
 
 const itemMiddleware = new itemHandler();
