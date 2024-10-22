@@ -127,6 +127,20 @@ class ItemService {
         const results = await itemModel.aggregate([
             { $match: { foodType: foodType, status: 1 } },
             {
+                $lookup: {
+                    from: "promotions",
+                    localField: "promotion",
+                    foreignField: "_id",
+                    as: "promotionDetails"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$promotionDetails",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
                 $facet: {
                     totalCount: [{ $count: "count" }],
                     items: [
@@ -139,7 +153,14 @@ class ItemService {
                                 price: 1,
                                 images: 1,
                                 foodType: 1,
-                                promotion: 1
+                                promotion: {
+                                    _id: "$promotionDetails._id",
+                                    promotionName: "$promotionDetails.promotionName",
+                                    description: "$promotionDetails.description",
+                                    discountPercentage: "$promotionDetails.discountPercentage",
+                                    startDate: "$promotionDetails.startDate",
+                                    endDate: "$promotionDetails.endDate"
+                                }
                             }
                         }
                     ]
