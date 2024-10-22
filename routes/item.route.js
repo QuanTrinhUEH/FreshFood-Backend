@@ -10,6 +10,7 @@ itemRouter.post('/', authentication, authorization("admin"), itemMiddleware.crea
 itemRouter.patch('/:id', authentication, authorization("admin"), itemMiddleware.updateItem, itemController.updateItem);
 itemRouter.get('/management', authentication, authorization("admin"), itemMiddleware.getItemsAdmin, itemController.getItemsAdmin);
 itemRouter.get('/', itemMiddleware.getItems, itemController.getItems);
+itemRouter.get('/promotions', itemMiddleware.getItems, itemController.getItemsWithPromotions);
 itemRouter.get('/:id', itemController.getItem);
 
 export default itemRouter

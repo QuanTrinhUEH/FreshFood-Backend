@@ -77,6 +77,50 @@ class ItemService {
         const item = await itemModel.findOne({ _id: id }).populate("promotion");
         return item;
     }
+    async getItemsWithPromotions(page, pageSize) {
+        const skip = (page - 1) * pageSize;
+
+        const results = await itemModel.aggregate([
+            { $match: { promotion: { $exists: true, $ne: null }, status: 1 } },
+            {
+                $lookup: {
+                    from: "promotions",
+                    localField: "promotion",
+                    foreignField: "_id",
+                    as: "promotionDetails"
+                }
+            },
+            { $unwind: "$promotionDetails" },
+            {
+                $facet: {
+                    totalCount: [{ $count: "count" }],
+                    items: [
+                        { $skip: skip },
+                        { $limit: pageSize },
+                        {
+                            $project: {
+                                _id: 1,
+                                itemName: 1,
+                                price: 1,
+                                images: 1,
+                                foodType: 1,
+                                promotion: {
+                                    _id: "$promotionDetails._id",
+                                    promotionName: "$promotionDetails.promotionName",
+                                    discountPercentage: "$promotionDetails.discountPercentage"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const totalItemsCount = results[0].totalCount[0] ? results[0].totalCount[0].count : 0;
+        const items = results[0].items;
+
+        return { items, totalItemsCount };
+    }
 }
 
 const itemService = new ItemService();
