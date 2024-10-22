@@ -42,11 +42,8 @@ app.use('/upload', uploadRouter);
 app.use('/order', orderRouter);
 // Error handling middleware
 app.use((err, req, res, next) => {
-    if (err.message) {
-        return res.json({ error: err.message });
-    } else {
-        return res.json({ err });
-    }
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // ON START
@@ -54,3 +51,8 @@ app.listen(process.env.PORT, async (err) => {
     await databaseService.connect()
     console.log(`Your app is listening on http://localhost:${process.env.PORT}`)
 })
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Application specific logging, throwing an error, or other logic here
+});
