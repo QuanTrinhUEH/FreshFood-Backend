@@ -3,10 +3,10 @@ import orderService from '../service/order.service.js';
 class OrderController {
     async createOrder(req, res, next) {
         try {
-            const { items, totalAmount } = req.body;
+            const { items, totalAmount, address } = req.body;
             const userId = req.user._id;
 
-            const newOrder = await orderService.createOrder(userId, items, totalAmount);
+            const newOrder = await orderService.createOrder(userId, items, totalAmount, address);
 
             res.status(201).json({
                 message: 'Đơn hàng đã tạo thành công',

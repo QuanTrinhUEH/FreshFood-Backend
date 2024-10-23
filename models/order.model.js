@@ -10,7 +10,12 @@ const orderSchema = new mongoose.Schema({
   orderDate: { type: Date, default: Date.now },
   items: [orderItemSchema],
   totalAmount: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' }
-});
+  status: { 
+    type: String, 
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], 
+    default: 'pending' 
+  },
+  address: { type: String, required: true }
+}, { timestamps: true });
 
 export const orderModel = mongoose.model('Order', orderSchema);

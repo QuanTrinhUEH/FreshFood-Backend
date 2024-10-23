@@ -3,7 +3,7 @@ import { orderModel } from "../models/order.model.js";
 class OrderHandler {
     async createOrder(req, res, next) {
         try {
-            const { items, totalAmount } = req.body;
+            const { items, totalAmount, address } = req.body;
             const schema = Joi.object().keys({
                 items: Joi.array()
                     .required()
@@ -32,11 +32,17 @@ class OrderHandler {
                     .required()
                     .messages({
                         "any.required": "Tổng tiền không được để trống"
+                    }),
+                address: Joi.string()
+                    .required()
+                    .messages({
+                        "any.required": "Địa chỉ không được để trống"
                     })
             });
             await schema.validateAsync({
                 items,
-                totalAmount
+                totalAmount,
+                address
             });
             next();
         } catch (e) {

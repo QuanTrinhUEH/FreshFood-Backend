@@ -2,23 +2,19 @@ import mongoose from "mongoose";
 import { orderModel } from "../models/order.model.js";
 
 class OrderService {
-    async createOrder(userId, items, totalAmount) {
-        try {
-            const newOrder = await orderModel.create({
-                user: userId,
-                items,
-                totalAmount
-            });
-            return newOrder;
-        } catch (e) {
-            throw (
-                {
-                    message: e.message || e,
-                    status: 500,
-                    data: null
-                }
-            )
-        }
+    async createOrder(userId, items, totalAmount, address) {
+        const order = new orderModel({
+            user: userId,
+            items: items.map(item => ({
+                item: item.itemId,
+                quantity: item.quantity
+            })),
+            totalAmount,
+            address
+        });
+
+        const savedOrder = await order.save();
+        return savedOrder;
     };
     async updateOrderStatus(id, status) {
         try {
@@ -213,6 +209,7 @@ class OrderService {
                     },
                     totalAmount: 1,
                     status: 1,
+                    address: 1,
                     createdAt: 1,
                 }
             }
