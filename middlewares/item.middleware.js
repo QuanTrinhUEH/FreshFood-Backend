@@ -83,43 +83,25 @@ class itemHandler {
         try {
             const { itemName, price, variants, description, images, foodType, status, promotion } = req.body
             const schema = Joi.object().keys({
-                itemName: Joi.string()
-                    .required()
-                    .messages({
-                        "any.required": "Tên sản phẩm không được để trống"
-                    }),
+                itemName: Joi.string(),
                 price: Joi.number()
                     .min(1000)
                     .max(1000000)
-                    .required()
                     .messages({
-                        "any.required": "Giá sản phẩm không được để trống",
                         "number.min": "Giá sản phẩm phải lớn hơn 1000",
                         "number.max": "Giá sản phẩm phải nhỏ hơn 1000000"
                     }),
                 variants: Joi.string()
                     .min(1)
-                    .required()
                     .messages({
                         "string.min": "Tên phân loại phải có ít nhất 1 kí tự",
-                        "any.required": "Tên phân loại không được để trống"
                     }),
-                description: Joi.string()
-                    .required()
-                    .messages({
-                        "any.required": "Mô tả sản phẩm không được để trống"
-                    }),
+                description: Joi.string(),
                 images: Joi.array()
-                    .items(Joi.string())
-                    .required()
-                    .messages({
-                        "any.required": "Ảnh sản phẩm không được để trống"
-                    }),
+                    .items(Joi.string()),
                 foodType: Joi.string()
-                    .required()
                     .valid('fruits', 'vegetables', 'meats', 'seafood')
                     .messages({
-                        "any.required": "Loại sản phẩm không được để trống",
                         "any.only": "Loại sản phẩm không hợp lệ"
                     }),
                 status: Joi.number()
