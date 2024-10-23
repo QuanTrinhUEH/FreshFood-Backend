@@ -124,6 +124,8 @@ class OrderService {
                                 },
                                 totalAmount: 1,
                                 status: 1,
+                                address: 1,
+                                phoneNumber: 1,
                                 createdAt: 1,
                             }
                         }
@@ -211,6 +213,7 @@ class OrderService {
                     totalAmount: 1,
                     status: 1,
                     address: 1,
+                    phoneNumber: 1,
                     createdAt: 1,
                 }
             }
