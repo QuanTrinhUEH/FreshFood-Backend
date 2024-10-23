@@ -128,6 +128,23 @@ class OrderHandler {
             next(e);
         }
     }
+
+    async getUserOrders(req, res, next) {
+        const schema = Joi.object({
+            page: Joi.number().integer().min(1).default(1),
+            pageSize: Joi.number().integer().min(1).max(100).default(10),
+            status: Joi.string().valid('pending', 'processing', 'shipped', 'delivered', 'cancelled').optional()
+        });
+
+        try {
+            const value = await schema.validateAsync(req.query);
+            req.query = value;
+            console.log(req.query);
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
 }
 
 const orderMiddleware = new OrderHandler();

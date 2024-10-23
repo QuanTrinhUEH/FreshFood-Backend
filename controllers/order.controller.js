@@ -130,6 +130,36 @@ class OrderController {
             });
         }
     }
+
+    async getUserOrders(req, res) {
+        try {
+            console.log(req.user);
+            const userId = req.user._id;
+            const { page, pageSize, status } = req.query;
+            const filters = { user: userId };
+            if (status) {
+                filters.status = status;
+            }
+            const { orders, totalOrdersCount } = await orderService.getOrders(filters, page, pageSize);
+            
+            res.status(200).json({
+                message: "Lấy danh sách đơn hàng của người dùng thành công",
+                status: 200,
+                data: {
+                    orders,
+                    totalPages: Math.ceil(totalOrdersCount / pageSize),
+                    currentPage: page,
+                    totalOrders: totalOrdersCount
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: error.message || "Có lỗi xảy ra khi lấy danh sách đơn hàng",
+                status: 500,
+                data: null
+            });
+        }
+    }
 }
 
 export default new OrderController();

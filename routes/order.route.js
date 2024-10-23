@@ -9,6 +9,7 @@ router.post('/', authentication, authorization("user"), orderController.createOr
 router.patch('/status/:id', authentication, authorization("admin"), orderController.updateOrderStatus);
 router.patch('/cancel/:id', authentication, authorization("user"), orderController.cancelOrder);
 router.get('/', authentication, authorization("admin"), orderMiddleware.getOrders, orderController.getOrders);
+router.get('/user/myOrders', authentication, authorization("user"), orderMiddleware.getUserOrders, orderController.getUserOrders);
 router.get('/:id', authentication, authorization("admin"), orderController.getOrder);
 
 export default router;
