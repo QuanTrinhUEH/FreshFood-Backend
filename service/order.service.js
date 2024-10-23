@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { orderModel } from "../models/order.model.js";
 
 class OrderService {
-    async createOrder(userId, items, totalAmount, address) {
+    async createOrder(userId, items, totalAmount, address, phoneNumber) {
         const order = new orderModel({
             user: userId,
             items: items.map(item => ({
@@ -10,7 +10,8 @@ class OrderService {
                 quantity: item.quantity
             })),
             totalAmount,
-            address
+            address,
+            phoneNumber
         });
 
         const savedOrder = await order.save();

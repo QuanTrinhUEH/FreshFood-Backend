@@ -15,7 +15,8 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], 
     default: 'pending' 
   },
-  address: { type: String, required: true }
+  address: { type: String, required: true },
+  phoneNumber: { type: String, required: true }
 }, { timestamps: true });
 
 export const orderModel = mongoose.model('Order', orderSchema);
