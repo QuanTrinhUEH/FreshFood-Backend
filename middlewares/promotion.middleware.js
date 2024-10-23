@@ -80,36 +80,38 @@ class promotionHandler {
     const { promotionName, description, discountPercentage, startDate, endDate, status, applicableItems } = req.body;
 
     const schema = Joi.object().keys({
-      promotionName: Joi.string(),
-      description: Joi.string(),
+      promotionName: Joi.string().optional(),
+      description: Joi.string().optional(),
       discountPercentage: Joi.number()
         .min(0)
         .max(100)
+        .optional()
         .messages({
           'number.min': 'Phần trăm giảm giá phải lớn hơn hoặc bằng 0',
           'number.max': 'Phần trăm giảm giá phải nhỏ hơn hoặc bằng 100',
         }),
       startDate: Joi.date()
         .iso()
+        .optional()
         .messages({
           'date.base': 'Ngày bắt đầu không hợp lệ',
           'date.format': 'Ngày bắt đầu phải có định dạng YYYY-MM-DD'
         }),
       endDate: Joi.date()
         .iso()
+        .optional()
         .when('startDate', {
           is: Joi.exist(),
-          then: Joi.date().greater(Joi.ref('startDate')).required(),
-          otherwise: Joi.optional()
+          then: Joi.date().greater(Joi.ref('startDate')),
         })
         .messages({
           'date.base': 'Ngày kết thúc không hợp lệ',
           'date.format': 'Ngày kết thúc phải có định dạng YYYY-MM-DD',
           'date.greater': 'Ngày kết thúc phải sau ngày bắt đầu',
-          'any.required': 'Ngày kết thúc không được để trống khi có ngày bắt đầu'
         }),
       status: Joi.number()
         .valid(0, 1)
+        .optional()
         .messages({
           'any.only': 'Trạng thái không hợp lệ'
         }),
@@ -121,13 +123,14 @@ class promotionHandler {
             'string.hex': 'ID sản phẩm không hợp lệ',
             'string.length': 'ID sản phẩm không hợp lệ',
           }))
+        .optional()
         .messages({
           'array.base': 'Danh sách sản phẩm áp dụng phải là một mảng'
         })
     });
 
     try {
-      await schema.validateAsync({
+      const validatedData = await schema.validateAsync({
         promotionName,
         description,
         discountPercentage,
@@ -136,15 +139,25 @@ class promotionHandler {
         status,
         applicableItems
       });
-      // Check if all items exist
-      const items = await itemModel.find({ _id: { $in: applicableItems } });
-      if (items.length !== applicableItems.length) {
-        return res.status(400).json({
-          message: "Một hoặc nhiều sản phẩm không tồn tại",
-          status: 400,
-          data: null
-        });
+
+      // If only status is provided, skip other checks
+      if (Object.keys(validatedData).length === 1 && 'status' in validatedData) {
+        next();
+        return;
       }
+
+      // Check if all items exist (only if applicableItems is provided)
+      if (applicableItems && applicableItems.length > 0) {
+        const items = await itemModel.find({ _id: { $in: applicableItems } });
+        if (items.length !== applicableItems.length) {
+          return res.status(400).json({
+            message: "Một hoặc nhiều sản phẩm không tồn tại",
+            status: 400,
+            data: null
+          });
+        }
+      }
+
       const promotion = await promotionModel.findById(req.params.id);
       if (!promotion) {
         return res.status(404).json({
