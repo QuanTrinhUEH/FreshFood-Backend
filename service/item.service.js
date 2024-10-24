@@ -154,6 +154,7 @@ class ItemService {
                                 _id: 1,
                                 itemName: 1,
                                 price: 1,
+                                description: 1,
                                 images: 1,
                                 foodType: 1,
                                 promotion: {
