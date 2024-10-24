@@ -1,7 +1,7 @@
 import { itemModel } from "../models/item.model.js";
 
 class ItemService {
-    async createItem(itemName, price, variants, description, images, foodType, promotion) {
+    async createItem(itemName, price, variants, description, images, foodType, promotion, quantity) {
         const newItem = await itemModel.create({
             itemName,
             price,
@@ -9,7 +9,8 @@ class ItemService {
             description,
             images,
             foodType,
-            promotion
+            promotion,
+            quantity
         });
         return newItem;
     }
@@ -57,6 +58,7 @@ class ItemService {
                                     promotionName: 1,
                                     discountPercentage: 1
                                 },
+                                quantity: 1,
                                 createdAt: 1,
                                 updatedAt: 1
                             }
@@ -74,7 +76,7 @@ class ItemService {
         return { items, totalItemsCount };
     }
     async getItem(id) {
-        const item = await itemModel.findOne({ _id: id }).populate("promotion");
+        const item = await itemModel.findById({ _id: id }).populate("promotion");
         return item;
     }
     async getItemsWithPromotions(page, pageSize) {
@@ -108,7 +110,8 @@ class ItemService {
                                     _id: "$promotionDetails._id",
                                     promotionName: "$promotionDetails.promotionName",
                                     discountPercentage: "$promotionDetails.discountPercentage"
-                                }
+                                },
+                                quantity: 1
                             }
                         }
                     ]
@@ -160,7 +163,8 @@ class ItemService {
                                     discountPercentage: "$promotionDetails.discountPercentage",
                                     startDate: "$promotionDetails.startDate",
                                     endDate: "$promotionDetails.endDate"
-                                }
+                                },
+                                quantity: 1
                             }
                         }
                     ]

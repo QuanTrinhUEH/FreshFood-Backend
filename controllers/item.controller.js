@@ -97,6 +97,7 @@ class itemHandler {
                             foodType: item.foodType,
                             status: item.status,
                             promotion: item.promotion,
+                            quantity: item.quantity,
                             createdAt: item.createdAt,
                             updatedAt: item.updatedAt
                         }
@@ -114,11 +115,10 @@ class itemHandler {
     };
 
     async createItem(req, res) {
-        const { itemName, price, variants, description, images, foodType, promotion } = req.body;
+        const { itemName, price, variants, description, images, foodType, promotion, quantity } = req.body;
 
         try {
-            const newItem = await itemService.createItem(itemName, price, variants, description, images, foodType, promotion);
-
+            const newItem = await itemService.createItem(itemName, price, variants, description, images, foodType, promotion, quantity);
             res.json({
                 message: 'Tạo sản phẩm thành công',
                 status: 201,
@@ -130,7 +130,8 @@ class itemHandler {
                         description: newItem.description,
                         images: newItem.images,
                         foodType: newItem.foodType,
-                        promotion: newItem.promotion
+                        promotion: newItem.promotion,
+                        quantity: newItem.quantity
                     }
                 }
             })
@@ -162,7 +163,8 @@ class itemHandler {
                         images: updatedItem.images,
                         foodType: updatedItem.foodType,
                         status: updatedItem.status,
-                        promotion: updatedItem.promotion
+                        promotion: updatedItem.promotion,
+                        quantity: updatedItem.quantity
                     }
                 }
             })

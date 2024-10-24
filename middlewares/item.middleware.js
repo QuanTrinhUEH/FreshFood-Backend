@@ -4,7 +4,7 @@ import { itemModel } from "../models/item.model.js";
 class itemHandler {
     async createItem(req, res, next) {
         try {
-            const { itemName, price, variants, description, images, foodType, promotion } = req.body
+            const { itemName, price, variants, description, images, foodType, promotion, quantity } = req.body
             const schema = Joi.object().keys({
                 itemName: Joi.string()
                     .required()
@@ -52,6 +52,15 @@ class itemHandler {
                     .messages({
                         "string.hex": "ID khuyến mãi không hợp lệ",
                         "string.length": "ID khuyến mãi không hợp lệ"
+                    }),
+                quantity: Joi.number()
+                    .integer()
+                    .min(0)
+                    .required()
+                    .messages({
+                        "any.required": "Số lượng sản phẩm không được để trống",
+                        "number.base": "Số lượng sản phẩm phải là số nguyên",
+                        "number.min": "Số lượng sản phẩm không thể âm"
                     })
             })
             await schema.validateAsync({
@@ -61,7 +70,8 @@ class itemHandler {
                 description,
                 images,
                 foodType,
-                promotion
+                promotion,
+                quantity
             });
 
             const existedItem = await itemModel.findOne({ itemName, status: 1 })
@@ -81,7 +91,7 @@ class itemHandler {
     }
     async updateItem(req, res, next) {
         try {
-            const { itemName, price, variants, description, images, foodType, status, promotion } = req.body
+            const { itemName, price, variants, description, images, foodType, status, promotion, quantity } = req.body
             const schema = Joi.object().keys({
                 itemName: Joi.string(),
                 price: Joi.number()
@@ -117,6 +127,12 @@ class itemHandler {
                     .messages({
                         "string.hex": "ID khuyến mãi không hợp lệ",
                         "string.length": "ID khuyến mãi không hợp lệ"
+                    }),
+                quantity: Joi.number()
+                    .integer()
+                    .min(1)
+                    .messages({
+                        "number.min": "Số lượng sản phẩm phải lớn hơn 0"
                     })
             })
             await schema.validateAsync({
@@ -127,7 +143,8 @@ class itemHandler {
                 images,
                 foodType,
                 status,
-                promotion
+                promotion,
+                quantity
             });
 
             const id = req.params.id;
