@@ -1,23 +1,42 @@
 import { itemModel } from "../models/item.model.js";
 import { promotionModel } from "../models/promotion.model.js";
+import mongoose from "mongoose";
 
 class PromotionService {
     async createPromotion(promotionName, description, discountPercentage, startDate, endDate, applicableItems) {
-        const newPromotion = await promotionModel.create({
-            promotionName,
-            description,
-            discountPercentage,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
-            applicableItems
-        });
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-        // Update items with the new promotion
-        await itemModel.updateMany(
-            { _id: { $in: applicableItems } },
-            { $set: { promotion: newPromotion._id } }
-        );
-        return newPromotion;
+        try {
+            const newPromotion = await promotionModel.create([{
+                promotionName,
+                description,
+                discountPercentage,
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                applicableItems
+            }], { session });
+
+            // Update items with the new promotion
+            const updateResult = await itemModel.updateMany(
+                { _id: { $in: applicableItems } },
+                { $set: { promotion: newPromotion[0]._id } },
+                { session }
+            );
+
+            // Check if the update was successful
+            if (updateResult.modifiedCount !== applicableItems.length) {
+                throw new Error('Không thể cập nhật tất cả các sản phẩm với khuyến mãi mới');
+            }
+
+            await session.commitTransaction();
+            return newPromotion[0];
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
     }
     async updatePromotion(promotionId, promotionName, description, discountPercentage, startDate, endDate, status, applicableItems) {
         const updatedPromotion = await promotionModel.findByIdAndUpdate(
