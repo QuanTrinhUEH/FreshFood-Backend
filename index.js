@@ -49,7 +49,7 @@ app.use((err, req, res, next) => {
 // ON START
 app.listen(process.env.PORT, async (err) => {
     await databaseService.connect()
-    console.log(`Your app is listening on http://localhost:${process.env.PORT}`)
+    console.log(`Your app is listening`)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
