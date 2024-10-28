@@ -138,8 +138,7 @@ class OrderHandler {
 
         try {
             const value = await schema.validateAsync(req.query);
-            req.query = value;
-            console.log(req.query);
+            req.query = value; 
             next();
         } catch (e) {
             next(e);

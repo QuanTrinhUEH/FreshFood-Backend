@@ -2,7 +2,8 @@ import Joi from "joi";
 
 class feedbackHandler {
   async submitFeedback(req, res, next) {
-    const schema = Joi.object().keys({
+    const { feedback } = req.body;
+    const schema = Joi.object({
       feedback: Joi.string()
         .required()
         .messages({
@@ -10,9 +11,9 @@ class feedbackHandler {
           "any.required": "Feedback không được để trống"
         })
     });
-
+    
     try {
-      await schema.validateAsync(req.body);
+      await schema.validateAsync({ feedback });
       next();
     } catch (e) {
       next(e);
