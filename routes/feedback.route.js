@@ -7,7 +7,8 @@ const feedbackRouter = Router();
 
 feedbackRouter.get('/', authentication, feedbackController.getAllFeedback);
 feedbackRouter.post('/submit', authentication, authorization("user"), feedbackMiddleware.submitFeedback, feedbackController.submitFeedback);
-feedbackRouter.put('/status/:id', authentication, authorization("admin"), feedbackMiddleware.updateFeedbackStatus, feedbackController.updateFeedbackStatus);
+feedbackRouter.patch('/status/:id', authentication, authorization("admin"), feedbackMiddleware.updateFeedbackStatus, feedbackController.updateFeedbackStatus);
+feedbackRouter.get('/:id', authentication, authorization("admin"), feedbackController.getFeedbackById);
 
 export default feedbackRouter;
 

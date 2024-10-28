@@ -133,7 +133,6 @@ class OrderController {
 
     async getUserOrders(req, res) {
         try {
-            console.log(req.user);
             const userId = req.user._id;
             const { page, pageSize, status } = req.query;
             const filters = { user: userId };
